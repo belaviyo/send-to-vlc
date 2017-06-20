@@ -1,0 +1,36 @@
+{
+  "name": "Send to VLC (VideoLAN) media player",
+  "description": "Send streamable media from current tab to VLC (VideoLAN) media player",
+  "version": "0.1.0",
+  "manifest_version": 2,
+  "permissions": [
+    "storage",
+    "tabs",
+    "nativeMessaging",
+    "notifications",
+    "downloads",
+    "https://api.github.com/repos/belaviyo/native-client/releases/latest"
+  ],
+  "content_scripts":[
+    {
+      "run_at": "document_start",
+      "all_frames": true,
+      "matches":["*://*/*"],
+      "js":["data/inject.js"]
+    }
+  ],
+  "background": {
+    "persistent": false,
+    "scripts": [
+      "command.js",
+      "common.js"
+    ]
+  },
+  "browser_action": {},
+  "icons": {
+     "16": "data/icons/16.png",
+     "32": "data/icons/32.png",
+     "64": "data/icons/64.png",
+     "128": "data/icons/128.png"
+  }
+}

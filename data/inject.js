@@ -1,0 +1,81 @@
+'use strict';
+
+var urls = [];
+var players = [];
+
+function action (srcs, player) {
+  window.top.postMessage({
+    source: 'embedded-script'
+  }, '*');
+  urls.push(...srcs);
+  // u.indexOf('googlevideo.com') === -1: this extension is not a YouTube downloader
+  urls = urls.filter((u, i, l) => u && l.indexOf(u) === i && u.indexOf('googlevideo.com') === -1);
+
+  players.push(player);
+  players = players.filter((p, i, l) => p && l.indexOf(p) === i);
+
+  if (urls.length) {
+    chrome.runtime.sendMessage({
+      method: 'show-button',
+      count: urls.length
+    });
+  }
+}
+
+window.addEventListener('message', e => {
+  if (e.data && e.data.source === 'xmlhttprequest-open') {
+    action([e.data.url]);
+  }
+});
+document.addEventListener('canplay', function (e) {
+  const target = e.target;
+  action([target.src, ...target.querySelectorAll('source')].map(s => s.src), target);
+}, true);
+
+chrome.runtime.onMessage.addListener((request) => {
+  if (request.method === 'get-urls') {
+    players.forEach(p => {
+      try {
+        p.pause();
+      }
+      catch (e) {}
+    });
+    if (urls.length) {
+      chrome.runtime.sendMessage({
+        method: 'send-to-vlc',
+        urls
+      });
+    }
+    else if (window.location.hostname === 'www.youtube.com') {
+      chrome.runtime.sendMessage({
+        method: 'send-to-vlc',
+        urls: [window.location.href]
+      });
+    }
+  }
+});
+
+document.documentElement.appendChild(Object.assign(document.createElement('script'), {
+  textContent: `
+  {
+    const open = XMLHttpRequest.prototype.open;
+    XMLHttpRequest.prototype.open = function (method, url) {
+      open.apply(this, arguments);
+      this.addEventListener('readystatechange', function _() {
+        if(this.readyState == this.HEADERS_RECEIVED) {
+          const contentType = this.getResponseHeader('Content-Type');
+          if (contentType.startsWith('video/') || contentType.startsWith('audio/')) {
+            window.postMessage({
+              source: 'xmlhttprequest-open',
+              url,
+              method,
+              contentType
+            }, '*');
+          }
+          this.removeEventListener('readystatechange', _);
+        }
+      })
+    }
+  }
+  `
+}));
