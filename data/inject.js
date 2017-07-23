@@ -2,14 +2,18 @@
 
 var urls = [];
 var players = [];
+var detected = false;
 
-function action (srcs, player) {
+function action(srcs, player) {
   window.top.postMessage({
     source: 'embedded-script'
   }, '*');
+  // security check
+  srcs = srcs.filter(u => /^(https*|ftp):\/\//.test(u));
   urls.push(...srcs);
   // u.indexOf('googlevideo.com') === -1: this extension is not a YouTube downloader
   urls = urls.filter((u, i, l) => u && l.indexOf(u) === i && u.indexOf('googlevideo.com') === -1);
+  urls = urls.slice(-200);
 
   players.push(player);
   players = players.filter((p, i, l) => p && l.indexOf(p) === i);
@@ -26,13 +30,16 @@ window.addEventListener('message', e => {
   if (e.data && e.data.source === 'xmlhttprequest-open') {
     action([e.data.url]);
   }
+  else if (e.data && e.data.source === 'embedded-script') {
+    detected = true;
+  }
 });
-document.addEventListener('canplay', function (e) {
+document.addEventListener('canplay', function(e) {
   const target = e.target;
-  action([target.src, ...target.querySelectorAll('source')].map(s => s.src), target);
+  action([target, ...target.querySelectorAll('source')].map(s => s.src), target);
 }, true);
 
-chrome.runtime.onMessage.addListener((request) => {
+chrome.runtime.onMessage.addListener(request => {
   if (request.method === 'get-urls') {
     players.forEach(p => {
       try {
@@ -47,6 +54,12 @@ chrome.runtime.onMessage.addListener((request) => {
       });
     }
     else if (window.location.hostname === 'www.youtube.com') {
+      chrome.runtime.sendMessage({
+        method: 'send-to-vlc',
+        urls: [window.location.href]
+      });
+    }
+    else if (window === window.top && !detected) {
       chrome.runtime.sendMessage({
         method: 'send-to-vlc',
         urls: [window.location.href]

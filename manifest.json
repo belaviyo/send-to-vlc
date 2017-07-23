@@ -1,7 +1,7 @@
 {
   "name": "Send to VLC (VideoLAN) media player",
   "description": "Send streamable media from current tab to VLC (VideoLAN) media player",
-  "version": "0.1.0",
+  "version": "0.1.5",
   "manifest_version": 2,
   "permissions": [
     "storage",
@@ -26,11 +26,27 @@
       "common.js"
     ]
   },
-  "browser_action": {},
+  "browser_action": {
+    "default_icon": {
+      "16": "data/icons/16.png",
+      "32": "data/icons/32.png",
+      "64": "data/icons/64.png"
+    }
+  },
   "icons": {
      "16": "data/icons/16.png",
      "32": "data/icons/32.png",
      "64": "data/icons/64.png",
      "128": "data/icons/128.png"
+  },
+  "homepage_url": "http://add0n.com/send-to-vlc.html",
+  "options_ui": {
+    "page": "data/options/index.html",
+    "chrome_style": true
+  },
+  "applications": {
+    "gecko": {
+      "id": "{3e0ac434-26e0-4c03-b757-3078486800c3}"
+    }
   }
 }

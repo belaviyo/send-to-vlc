@@ -68,7 +68,7 @@ document.addEventListener('click', e => {
     req.send();
   }
   else if (target.dataset.cmd === 'check') {
-    chrome.runtime.sendNativeMessage('com.add0n.native-client', {
+    chrome.runtime.sendNativeMessage('com.add0n.native_client', {
       method: 'spec'
     }, response => {
       console.error(response)

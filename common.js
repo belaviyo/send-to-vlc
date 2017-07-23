@@ -12,8 +12,9 @@ function notify (message) {
 
 function sendToVLC(urls) {
   chrome.storage.local.get('command', prefs => {
-    chrome.runtime.sendNativeMessage('com.add0n.native-client', {
+    chrome.runtime.sendNativeMessage('com.add0n.native_client', {
       permissions: ['crypto', 'fs', 'os', 'path', 'child_process'],
+      args: [urls.join('\n'), prefs.command || commands.guess()],
       script: `
         const path = require('path');
 
@@ -21,7 +22,7 @@ function sendToVLC(urls) {
           require('os').tmpdir(),
           'vlc-' + require('crypto').randomBytes(4).readUInt32LE(0) + '.m3u8'
         );
-        require('fs').writeFile(filename, \`${urls.join('\n')}\`, err => {
+        require('fs').writeFile(filename, args[0], err => {
           if (err) {
             push({
               err: err.message || err
@@ -29,11 +30,10 @@ function sendToVLC(urls) {
             done();
           }
           else {
-            const command = '${(prefs.command || commands.guess()).replace(/\\/g, '\\\\')}';
-            let [exe, ...args] = command.split(' ');
-            exe = exe.replace(/%([^%]+)%/g, (_, n) => env[n]);
+            let [command, ...param] = args[1].split(' ');
+            command = command.replace(/%([^%]+)%/g, (_, n) => env[n]);
 
-            const vlc = require('child_process').spawn(exe, [...args, filename], {
+            const vlc = require('child_process').spawn(command, [...param, filename], {
               detached: true
             });
             let stdout = '', stderr = '';
@@ -52,7 +52,7 @@ function sendToVLC(urls) {
           url: '/data/guide/index.html'
         });
       }
-      if (res.code !== 0) {
+      if (res && res.code !== 0) {
         notify(res.stderr || res.error || res.err);
       }
     });
@@ -76,3 +76,24 @@ chrome.browserAction.onClicked.addListener(tab => {
     method: 'get-urls'
   });
 });
+
+// FAQs & Feedback
+chrome.storage.local.get({
+  'version': null,
+  'faqs': navigator.userAgent.toLowerCase().indexOf('firefox') === -1 ? true : false
+}, prefs => {
+  let version = chrome.runtime.getManifest().version;
+
+  if (prefs.version ? (prefs.faqs && prefs.version !== version) : true) {
+    chrome.storage.local.set({version}, () => {
+      chrome.tabs.create({
+        url: 'http://add0n.com/send-to-vlc.html?version=' + version +
+          '&type=' + (prefs.version ? ('upgrade&p=' + prefs.version) : 'install')
+      });
+    });
+  }
+});
+(function () {
+  let {name, version} = chrome.runtime.getManifest();
+  chrome.runtime.setUninstallURL('http://add0n.com/feedback.html?name=' + name + '&version=' + version);
+})();
