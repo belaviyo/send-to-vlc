@@ -6,6 +6,8 @@ var commands = {
   linux: 'vlc'
 };
 
+commands.tag = 'vlc';
+
 commands.guess = () => {
   if (navigator.platform.startsWith('Win')) {
     return commands.windows;

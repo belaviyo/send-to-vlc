@@ -41,27 +41,29 @@ document.addEventListener('canplay', function(e) {
 
 chrome.runtime.onMessage.addListener(request => {
   if (request.method === 'get-urls') {
-    players.forEach(p => {
-      try {
-        p.pause();
-      }
-      catch (e) {}
-    });
+    if (request.pause) {
+      players.forEach(p => {
+        try {
+          p.pause();
+        }
+        catch (e) {}
+      });
+    }
     if (urls.length) {
       chrome.runtime.sendMessage({
-        method: 'send-to-vlc',
+        method: request.reply,
         urls
       });
     }
     else if (window.location.hostname === 'www.youtube.com') {
       chrome.runtime.sendMessage({
-        method: 'send-to-vlc',
+        method: request.reply,
         urls: [window.location.href]
       });
     }
     else if (window === window.top && !detected) {
       chrome.runtime.sendMessage({
-        method: 'send-to-vlc',
+        method: request.reply,
         urls: [window.location.href]
       });
     }
@@ -76,7 +78,7 @@ document.documentElement.appendChild(Object.assign(document.createElement('scrip
       open.apply(this, arguments);
       this.addEventListener('readystatechange', function _() {
         if(this.readyState == this.HEADERS_RECEIVED) {
-          const contentType = this.getResponseHeader('Content-Type');
+          const contentType = this.getResponseHeader('Content-Type') || '';
           if (contentType.startsWith('video/') || contentType.startsWith('audio/')) {
             window.postMessage({
               source: 'xmlhttprequest-open',
