@@ -1,0 +1,58 @@
+{
+  "name": "Send to VLC (VideoLAN) media player",
+  "description": "__MSG_appDesc__",
+  "version": "0.2.1",
+  "default_locale": "en",
+  "manifest_version": 2,
+  "permissions": [
+    "storage",
+    "tabs",
+    "nativeMessaging",
+    "notifications",
+    "contextMenus",
+    "downloads",
+    "<all_urls>",
+    "clipboardWrite",
+    "history"
+  ],
+  "content_scripts":[{
+    "run_at": "document_start",
+    "all_frames": true,
+    "match_about_blank": true,
+    "matches": ["*://*/*"],
+    "exclude_globs": ["*://*.youtube.com/*"],
+    "js": ["data/inject.js"]
+  }],
+  "background": {
+    "persistent": false,
+    "scripts": [
+      "command.js",
+      "termlib_parser.js",
+      "common.js"
+    ]
+  },
+  "browser_action": {
+    "default_icon": {
+      "16": "data/icons/16.png",
+      "32": "data/icons/32.png",
+      "64": "data/icons/64.png"
+    }
+  },
+  "icons": {
+     "16": "data/icons/16.png",
+     "32": "data/icons/32.png",
+     "64": "data/icons/64.png",
+     "128": "data/icons/128.png"
+  },
+  "homepage_url": "http://add0n.com/send-to.html?from=vlc",
+  "options_ui": {
+    "page": "data/options/index.html",
+    "chrome_style": true
+  },
+  "applications": {
+    "gecko": {
+      "id": "{3e0ac434-26e0-4c03-b757-3078486800c3}",
+      "strict_min_version": "52.0"
+    }
+  }
+}
