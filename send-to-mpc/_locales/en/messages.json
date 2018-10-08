@@ -20,6 +20,9 @@
   "msgNotFound": {
     "message": "The external media player is not found. Please make sure the path in the options page is correct"
   },
+  "msgCommunicationRejected": {
+    "message": "To allow other extensions to send media links to the external music player, set a passphrase in the options page and share it with those extensions"
+  },
   "optionsTitle": {
     "message": "Options :: Send to Media Player Classic (MPC-HC)"
   },
@@ -28,6 +31,12 @@
   },
   "optionsCMDDesc": {
     "message": "OS level command to open Media Player Classic (MPC-HC)"
+  },
+  "optionsPassphrase": {
+    "message": "Passphrase"
+  },
+  "optionsPassphraseDesc": {
+    "message": "If you would like to allow another extension to send commands to the external player using this extension, please assign a passphrase for the communication"
   },
   "optionsVideo": {
     "message": "Context-menu for <video> elements"

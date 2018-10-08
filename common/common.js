@@ -39,7 +39,7 @@ var copy = (tabId, urls) => {
   }
 };
 
-function sendToVLC(urls) {
+function sendToPlayer(urls) {
   // mark links as visited
   // https://github.com/belaviyo/send-to-vlc/issues/15
   urls.forEach(url => chrome.history.addUrl({url}));
@@ -154,7 +154,7 @@ const collect = (tabId, callback) => chrome.tabs.executeScript(tabId, {
 });
 
 chrome.browserAction.onClicked.addListener(tab => collect(tab.id, urls => {
-  sendToVLC(urls);
+  sendToPlayer(urls);
   // pause all the playing players
   chrome.tabs.executeScript(tab.id, {
     allFrames: false,
@@ -174,10 +174,10 @@ chrome.browserAction.onClicked.addListener(tab => collect(tab.id, urls => {
 
 chrome.contextMenus.onClicked.addListener((info, tab) => {
   if (info.menuItemId === 'open-link') {
-    sendToVLC([info.linkUrl || info.srcUrl]);
+    sendToPlayer([info.linkUrl || info.srcUrl]);
   }
   else if (info.menuItemId === 'open-media') {
-    sendToVLC([info.srcUrl || info.linkUrl]);
+    sendToPlayer([info.srcUrl || info.linkUrl]);
   }
   else if (info.menuItemId === 'copy') {
     collect(tab.id, urls => copy(tab.id, urls));
@@ -227,6 +227,23 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
   chrome.runtime.onInstalled.addListener(callback);
   chrome.runtime.onStartup.addListener(callback);
 }
+
+// External application support
+chrome.runtime.onMessageExternal.addListener(request => {
+  if (request.method === 'play') {
+    chrome.storage.local.get({
+      passphrase: ''
+    }, prefs => {
+      if (prefs.passphrase && prefs.passphrase === request.passphrase) {
+        const urls = Array.isArray(request.urls) ? request.urls : [request.urls];
+        sendToPlayer(urls);
+      }
+      else {
+        notify(chrome.i18n.getMessage('msgCommunicationRejected'));
+      }
+    });
+  }
+});
 
 // FAQs & Feedback
 chrome.storage.local.get({
